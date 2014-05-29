@@ -15,12 +15,16 @@
  * For a full copy of the GNU General Public License see the LICENSE file.
  */
 
-#ifndef DISTRHO_UI_ZYNADDSUBFX_HPP_INCLUDED
-#define DISTRHO_UI_ZYNADDSUBFX_HPP_INCLUDED
+#ifndef DISTRHO_UI_NEKOBI_HPP_INCLUDED
+#define DISTRHO_UI_NEKOBI_HPP_INCLUDED
 
 #include "DistrhoUI.hpp"
 
+#include "Image.hpp"
+
 #include "DistrhoArtworkZynAddSubFX.hpp"
+
+using DGL::Image;
 
 START_NAMESPACE_DISTRHO
 
@@ -65,4 +69,4 @@ private:
 
 END_NAMESPACE_DISTRHO
 
-#endif // DISTRHO_UI_ZYNADDSUBFX_HPP_INCLUDED
+#endif // DISTRHO_UI_NEKOBI_HPP_INCLUDED

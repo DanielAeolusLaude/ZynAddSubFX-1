@@ -60,6 +60,7 @@ void DistrhoPluginZynAddSubFX::d_activate()
 
 void DistrhoPluginZynAddSubFX::d_deactivate()
 {
+}
 
 void DistrhoPluginZynAddSubFX::d_run(const float**, float** outputs, uint32_t frames, const MidiEvent* /*midiEvents*/, uint32_t /*midiEventCount*/)
 {
