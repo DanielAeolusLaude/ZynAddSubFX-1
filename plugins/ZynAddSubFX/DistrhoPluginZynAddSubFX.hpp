@@ -20,7 +20,13 @@
 
 #include "DistrhoPlugin.hpp"
 
+#include "../common/Misc/Master.h"
+
+class MasterUI;
+
 START_NAMESPACE_DISTRHO
+
+class DistrhoUIZynAddSubFX;
 
 // -----------------------------------------------------------------------
 
@@ -46,7 +52,7 @@ protected:
 
     const char* d_getMaker() const noexcept override
     {
-        return "DISTRHO";
+        return "Nasca Octavian Paul, Mark McCurry, falkTX";
     }
 
     const char* d_getLicense() const noexcept override
@@ -59,7 +65,7 @@ protected:
         return 0x1000;
     }
 
-    long d_getUniqueId() const noexcept override
+    int64_t d_getUniqueId() const noexcept override
     {
         return d_cconst('Z', 'A', 'S', 'F');
     }
@@ -68,23 +74,39 @@ protected:
     // Init
 
     void d_initParameter(uint32_t index, Parameter& parameter) override;
+    void d_initStateKey(uint32_t index, d_string& stateKey) override;
 
     // -------------------------------------------------------------------
     // Internal data
 
     float d_getParameterValue(uint32_t index) const override;
     void  d_setParameterValue(uint32_t index, float value) override;
+    void  d_setState(const char* key, const char* value) override;
 
     // -------------------------------------------------------------------
     // Process
 
-    void d_activate() override;
-    void d_deactivate() override;
     void d_run(const float**, float** outputs, uint32_t frames, const MidiEvent* midiEvents, uint32_t midiEventCount) override;
+
+    // -------------------------------------------------------------------
+    // Callbacks
+
+    void d_bufferSizeChanged(uint32_t newBufferSize) override;
+    void d_sampleRateChanged(double newSampleRate) override;
 
     // -------------------------------------------------------------------
 
 private:
+    Master* fMaster;
+    //MasterUI* fMasterUI;
+    uint    fSampleRate;
+
+    DistrhoUIZynAddSubFX* fUI;
+
+    void _initMaster();
+    void _deleteMaster();
+
+    friend class DistrhoUIZynAddSubFX;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistrhoPluginZynAddSubFX)
 };

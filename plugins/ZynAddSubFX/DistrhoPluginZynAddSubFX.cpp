@@ -17,55 +17,299 @@
 
 #include "DistrhoPluginZynAddSubFX.hpp"
 
+//#include "../common/DSP/FFTwrapper.h"
+//#include "../common/Misc/Part.h"
+#include "../common/Misc/Util.h"
+
+#include <ctime>
+
 START_NAMESPACE_DISTRHO
+
+// -----------------------------------------------------------------------
+// Manage global zyn data using a reference counter
+
+class ZynAddSubFxInstanceCount
+{
+public:
+    ZynAddSubFxInstanceCount()
+        : fCount(0) {}
+
+    ~ZynAddSubFxInstanceCount()
+    {
+        DISTRHO_SAFE_ASSERT(fCount == 0);
+    }
+
+    void addOne(const double sampleRate, const uint32_t bufferSize)
+    {
+        if (fCount++ == 0)
+        {
+            DISTRHO_SAFE_ASSERT(synth == nullptr);
+            DISTRHO_SAFE_ASSERT(denormalkillbuf == nullptr);
+
+            reinit(sampleRate, bufferSize);
+        }
+    }
+
+    void removeOne()
+    {
+        if (--fCount == 0)
+        {
+            Master::deleteInstance();
+
+            if (denormalkillbuf != nullptr)
+            {
+                delete[] denormalkillbuf;
+                denormalkillbuf = nullptr;
+            }
+
+            if (synth != nullptr)
+            {
+                delete synth;
+                synth = nullptr;
+            }
+        }
+    }
+
+    void reinit(const double sampleRate, const uint32_t bufferSize)
+    {
+        Master::deleteInstance();
+
+        if (denormalkillbuf != nullptr)
+        {
+            delete[] denormalkillbuf;
+            denormalkillbuf = nullptr;
+        }
+
+        if (synth != nullptr)
+        {
+            delete synth;
+            synth = nullptr;
+        }
+
+        synth = new SYNTH_T();
+        synth->buffersize = bufferSize;
+        synth->samplerate = sampleRate;
+
+        if (synth->buffersize > 32)
+            synth->buffersize = 32;
+
+        synth->alias();
+
+        config.init();
+        config.cfg.SoundBufferSize   = synth->buffersize;
+        config.cfg.SampleRate        = synth->samplerate;
+        config.cfg.GzipCompression   = 0;
+        config.cfg.UserInterfaceMode = 1;
+
+        sprng((std::time(nullptr)));
+
+        denormalkillbuf = new float[synth->buffersize];
+        for (int i=0; i < synth->buffersize; ++i)
+            denormalkillbuf[i] = (RND - 0.5f) * 1e-16f;
+
+        Master::getInstance();
+    }
+
+    void maybeReinit(const double sampleRate, const uint32_t bufferSize)
+    {
+        if (bufferSize == synth->buffersize && sampleRate == synth->samplerate)
+            return;
+
+        reinit(sampleRate, bufferSize);
+    }
+
+private:
+    int fCount;
+
+    DISTRHO_PREVENT_HEAP_ALLOCATION
+    DISTRHO_DECLARE_NON_COPY_CLASS(ZynAddSubFxInstanceCount)
+};
+
+static ZynAddSubFxInstanceCount sInstanceCount;
+
+// -----------------------------------------------------------------------
+// Stores state on contructor, restores state on destuctor
+// Needed when recreating a zyn instance during buffersize/samplerate changes
+
+class ZynAddSubFxStateRestorer
+{
+public:
+    ZynAddSubFxStateRestorer(Master* const master)
+        : fData(nullptr),
+          fMaster(master)
+    {
+        config.save();
+        fMaster->getalldata(&fData);
+    }
+
+    ~ZynAddSubFxStateRestorer()
+    {
+        fMaster->putalldata(fData, 0);
+        fMaster->applyparameters(true);
+    }
+
+private:
+    char* fData;
+    Master* const fMaster;
+
+    DISTRHO_PREVENT_HEAP_ALLOCATION
+    DISTRHO_DECLARE_NON_COPY_CLASS(ZynAddSubFxStateRestorer)
+};
 
 // -----------------------------------------------------------------------
 
 DistrhoPluginZynAddSubFX::DistrhoPluginZynAddSubFX()
-    : Plugin(paramCount, 0, 0) // 0 programs, 0 states
+    : Plugin(paramCount, 0, 1), // 0 programs, 1 states
+      fMaster(nullptr),
+      fSampleRate(d_getSampleRate()),
+      fUI(nullptr)
 {
-    // reset
-    d_deactivate();
+    sInstanceCount.addOne(d_getSampleRate(), d_getBufferSize());
+    _initMaster();
 }
 
 DistrhoPluginZynAddSubFX::~DistrhoPluginZynAddSubFX()
 {
+    _deleteMaster();
+    sInstanceCount.removeOne();
 }
 
 // -----------------------------------------------------------------------
-// Init
+// Parameters (nothing yet)
 
-void DistrhoPluginZynAddSubFX::d_initParameter(uint32_t /*index*/, Parameter& /*parameter*/)
-{
-}
+void  DistrhoPluginZynAddSubFX::d_initParameter(uint32_t, Parameter&) {}
+void  DistrhoPluginZynAddSubFX::d_setParameterValue(uint32_t, float)  {}
+float DistrhoPluginZynAddSubFX::d_getParameterValue(uint32_t) const   { return 0.0f; }
 
 // -----------------------------------------------------------------------
-// Internal data
+// State
 
-float DistrhoPluginZynAddSubFX::d_getParameterValue(uint32_t /*index*/) const
+void DistrhoPluginZynAddSubFX::d_initStateKey(uint32_t index, d_string& stateKey)
 {
-    return 0.0f;
+    if (index != 0)
+        return;
+
+    stateKey = "state";
 }
 
-void DistrhoPluginZynAddSubFX::d_setParameterValue(uint32_t /*index*/, float /*value*/)
+void DistrhoPluginZynAddSubFX::d_setState(const char* key, const char* value)
 {
+    if (std::strcmp(key, "state") != 0)
+        return;
+
+    //fThread.stopLoadProgramLater();
+    fMaster->putalldata(const_cast<char*>(value), 0);
+    fMaster->applyparameters(true);
 }
+
+#if 0 // to get state
+{
+    config.save();
+
+    char* data = nullptr;
+    fMaster->getalldata(&data);
+    return data;
+}
+#endif
 
 // -----------------------------------------------------------------------
 // Process
 
-void DistrhoPluginZynAddSubFX::d_activate()
+void DistrhoPluginZynAddSubFX::d_run(const float**, float** outputs, uint32_t frames, const MidiEvent* midiEvents, uint32_t midiEventCount)
 {
+    if (pthread_mutex_trylock(&fMaster->mutex) != 0)
+    {
+        std::memset(outputs[0], 0, frames);
+        std::memset(outputs[1], 0, frames);
+        return;
+    }
+
+    for (uint32_t i=0; i < midiEventCount; ++i)
+    {
+        const MidiEvent& midiEvent(midiEvents[i]);
+        const uint8_t* const midiData(midiEvent.data);
+
+        const uint8_t status  = (midiData[0] < 0xF0) ? midiData[0] & 0xF0 : midiData[0];
+        const char    channel = (midiData[0] < 0xF0) ? midiData[0] & 0x0F : 0;
+
+        if (status == 0x80)
+        {
+            const char note = midiData[1];
+
+            fMaster->noteOff(channel, note);
+        }
+        else if (status == 0x90)
+        {
+            const char note = midiData[1];
+            const char velo = midiData[2];
+
+            fMaster->noteOn(channel, note, velo);
+        }
+        else if (status == 0xA0)
+        {
+            const char note     = midiData[1];
+            const char pressure = midiData[2];
+
+            fMaster->polyphonicAftertouch(channel, note, pressure);
+        }
+        else if (status == 0xB0)
+        {
+            const int control = midiData[1];
+            const int value   = midiData[2];
+
+            fMaster->setController(channel, control, value);
+        }
+        else if (status == 0xE0)
+        {
+            const uint8_t lsb = midiData[1];
+            const uint8_t msb = midiData[2];
+            const int   value = ((msb << 7) | lsb) - 8192;
+
+            fMaster->setController(channel, C_pitchwheel, value);
+        }
+    }
+
+    fMaster->GetAudioOutSamples(frames, fSampleRate, outputs[0], outputs[1]);
+
+    pthread_mutex_unlock(&fMaster->mutex);
 }
 
-void DistrhoPluginZynAddSubFX::d_deactivate()
+void DistrhoPluginZynAddSubFX::d_bufferSizeChanged(uint32_t newBufferSize)
 {
+    ZynAddSubFxStateRestorer stateRestorer(fMaster);
+
+    _deleteMaster();
+    sInstanceCount.maybeReinit(d_getSampleRate(), newBufferSize);
+    _initMaster();
 }
 
-void DistrhoPluginZynAddSubFX::d_run(const float**, float** outputs, uint32_t frames, const MidiEvent* /*midiEvents*/, uint32_t /*midiEventCount*/)
+void DistrhoPluginZynAddSubFX::d_sampleRateChanged(double newSampleRate)
 {
-    std::memset(outputs[0], 0, sizeof(float)*frames);
-    std::memset(outputs[1], 0, sizeof(float)*frames);
+    ZynAddSubFxStateRestorer stateRestorer(fMaster);
+
+    fSampleRate = newSampleRate;
+
+    _deleteMaster();
+    sInstanceCount.maybeReinit(newSampleRate, d_getBufferSize());
+    _initMaster();
+}
+
+void DistrhoPluginZynAddSubFX::_initMaster()
+{
+    fMaster = new Master();
+
+    for (int i = 0; i < NUM_MIDI_PARTS; ++i)
+        fMaster->partonoff(i, 1);
+}
+
+void DistrhoPluginZynAddSubFX::_deleteMaster()
+{
+    //ensure that everything has stopped
+    pthread_mutex_lock(&fMaster->mutex);
+    pthread_mutex_unlock(&fMaster->mutex);
+
+    delete fMaster;
+    fMaster = nullptr;
 }
 
 // -----------------------------------------------------------------------

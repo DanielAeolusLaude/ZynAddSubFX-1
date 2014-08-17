@@ -75,32 +75,26 @@ ifeq ($(LINUX),true)
 ifneq ($(shell pkg-config --exists jack && echo true),true)
 $(error JACK missing, cannot continue)
 endif
+# needed?
 ifneq ($(shell pkg-config --exists gl && echo true),true)
 $(error OpenGL missing, cannot continue)
 endif
-ifneq ($(shell pkg-config --exists x11 && echo true),true)
-$(error X11 missing, cannot continue)
-endif
 endif
 
-ifneq ($(shell pkg-config --exists liblo && echo true),true)
-$(error liblo missing, cannot continue)
+ifneq ($(shell pkg-config --exists fftw3 && echo true),true)
+$(error fftw3 missing, cannot continue)
 endif
-
-# --------------------------------------------------------------
-# Set libs stuff
-
-ifeq ($(LINUX),true)
-DGL_FLAGS = $(shell pkg-config --cflags gl x11)
-DGL_LIBS  = $(shell pkg-config --libs gl x11)
+ifneq ($(shell pkg-config --exists mxml && echo true),true)
+$(error mxml missing, cannot continue)
 endif
-
-ifeq ($(MACOS),true)
-DGL_LIBS  = -framework OpenGL -framework Cocoa
+ifneq ($(shell pkg-config --exists zlib && echo true),true)
+$(error zlib missing, cannot continue)
 endif
-
-ifeq ($(WIN32),true)
-DGL_LIBS  = -lopengl32 -lgdi32
+ifneq ($(shell pkg-config --exists ntk && echo true),true)
+$(error ntk missing, cannot continue)
+endif
+ifneq ($(shell pkg-config --exists ntk_images && echo true),true)
+$(error ntk_images missing, cannot continue)
 endif
 
 # --------------------------------------------------------------

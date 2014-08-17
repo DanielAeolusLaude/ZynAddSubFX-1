@@ -20,11 +20,7 @@
 
 #include "DistrhoUI.hpp"
 
-#include "Image.hpp"
-
-#include "DistrhoArtworkZynAddSubFX.hpp"
-
-using DGL::Image;
+#include "DistrhoPluginZynAddSubFX.hpp"
 
 START_NAMESPACE_DISTRHO
 
@@ -34,6 +30,7 @@ class DistrhoUIZynAddSubFX : public UI
 {
 public:
     DistrhoUIZynAddSubFX();
+    ~DistrhoUIZynAddSubFX() override;
 
 protected:
     // -------------------------------------------------------------------
@@ -41,26 +38,23 @@ protected:
 
     uint d_getWidth() const noexcept override
     {
-        return DistrhoArtworkZynAddSubFX::backgroundWidth;
+        return 390;
     }
 
     uint d_getHeight() const noexcept override
     {
-        return DistrhoArtworkZynAddSubFX::backgroundHeight;
+        return 525;
     }
 
     // -------------------------------------------------------------------
     // DSP Callbacks
 
     void d_parameterChanged(uint32_t index, float value) override;
-
-    // -------------------------------------------------------------------
-    // Widget Callbacks
-
-    void onDisplay() override;
+    void d_stateChanged(const char* key, const char* value) override;
 
 private:
-    Image fImgBackground;
+    MasterUI* fMasterUI;
+    int fUiClosed;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistrhoUIZynAddSubFX)
 };

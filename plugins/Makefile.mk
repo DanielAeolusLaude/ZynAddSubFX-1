@@ -59,12 +59,6 @@ all:
 # --------------------------------------------------------------
 # Common
 
-%.c.o: %.c
-	$(CC) $< $(BUILD_C_FLAGS) -c -o $@
-
-%.cpp.o: %.cpp
-	$(CXX) $< $(BUILD_CXX_FLAGS) -c -o $@
-
 clean:
 	rm -f *.o
 	rm -rf $(TARGET_DIR)/$(NAME) $(TARGET_DIR)/$(NAME)-* $(TARGET_DIR)/$(NAME).lv2/
@@ -76,47 +70,16 @@ jack: $(jack)
 
 $(jack): $(OBJS_DSP) $(OBJS_UI) $(DISTRHO_PLUGIN_FILES) $(DISTRHO_UI_FILES)
 	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(DGL_LIBS) $(shell pkg-config --cflags --libs jack) -DDISTRHO_PLUGIN_TARGET_JACK -o $@
-
-# --------------------------------------------------------------
-# LADSPA
-
-ladspa: $(ladspa_dsp)
-
-$(ladspa_dsp): $(OBJS_DSP) $(DISTRHO_PLUGIN_FILES)
-	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LADSPA -o $@
-
-# --------------------------------------------------------------
-# DSSI
-
-dssi: $(dssi_dsp) $(dssi_ui)
-
-$(dssi_dsp): $(OBJS_DSP) $(DISTRHO_PLUGIN_FILES)
-	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(SHARED) -DDISTRHO_PLUGIN_TARGET_DSSI -o $@
-
-$(dssi_ui): $(OBJS_UI) $(DISTRHO_UI_FILES)
-	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(DGL_LIBS) $(shell pkg-config --cflags --libs liblo) -DDISTRHO_PLUGIN_TARGET_DSSI -o $@
+	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs jack fftw3 mxml zlib ntk_images ntk) -DDISTRHO_PLUGIN_TARGET_JACK -o $@
 
 # --------------------------------------------------------------
 # LV2
 
-lv2_one: $(lv2)
-lv2_sep: $(lv2_dsp) $(lv2_ui)
+lv2: $(lv2)
 
 $(lv2): $(OBJS_DSP) $(OBJS_UI) $(DISTRHO_PLUGIN_FILES) $(DISTRHO_UI_FILES)
 	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(DGL_LIBS) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LV2 -o $@
-
-$(lv2_dsp): $(OBJS_DSP) $(DISTRHO_PLUGIN_FILES)
-	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LV2 -o $@
-
-$(lv2_ui): $(OBJS_UI) $(DISTRHO_UI_FILES)
-	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(DGL_LIBS) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LV2 -o $@
+	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs fftw3 mxml zlib ntk_images ntk) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LV2 -o $@
 
 # --------------------------------------------------------------
 # VST
@@ -125,6 +88,6 @@ vst: $(vst)
 
 $(vst): $(OBJS_DSP) $(OBJS_UI) $(DISTRHO_PLUGIN_FILES) $(DISTRHO_UI_FILES)
 	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(DGL_LIBS) $(SHARED) -DDISTRHO_PLUGIN_TARGET_VST -o $@
+	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs fftw3 mxml zlib ntk_images ntk) $(SHARED) -DDISTRHO_PLUGIN_TARGET_VST -o $@
 
 # --------------------------------------------------------------
