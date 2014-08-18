@@ -16,6 +16,7 @@
  */
 
 #include "DistrhoPluginZynAddSubFX.hpp"
+#include "DistrhoUIZynAddSubFX.hpp"
 
 //#include "../common/DSP/FFTwrapper.h"
 //#include "../common/Misc/Part.h"
@@ -278,9 +279,15 @@ void DistrhoPluginZynAddSubFX::d_bufferSizeChanged(uint32_t newBufferSize)
 {
     ZynAddSubFxStateRestorer stateRestorer(fMaster);
 
+    if (fUI != nullptr)
+        fUI->deleteMaster();
+
     _deleteMaster();
     sInstanceCount.maybeReinit(d_getSampleRate(), newBufferSize);
     _initMaster();
+
+    if (fUI != nullptr)
+        fUI->initMaster(this);
 }
 
 void DistrhoPluginZynAddSubFX::d_sampleRateChanged(double newSampleRate)
@@ -289,9 +296,15 @@ void DistrhoPluginZynAddSubFX::d_sampleRateChanged(double newSampleRate)
 
     fSampleRate = newSampleRate;
 
+    if (fUI != nullptr)
+        fUI->deleteMaster();
+
     _deleteMaster();
     sInstanceCount.maybeReinit(newSampleRate, d_getBufferSize());
     _initMaster();
+
+    if (fUI != nullptr)
+        fUI->initMaster(this);
 }
 
 void DistrhoPluginZynAddSubFX::_initMaster()

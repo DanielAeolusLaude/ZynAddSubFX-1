@@ -80,21 +80,45 @@ DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
     }
 
     DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
-    fMasterUI = new MasterUI(plugin->fMaster, &fUiClosed);
 
-    this->add(fMasterUI->masterwindow);
-
-    fMasterUI->masterwindow->show();
+    initMaster(plugin);
+    plugin->fUI = this;
 }
 
 DistrhoUIZynAddSubFX::~DistrhoUIZynAddSubFX()
 {
-    DISTRHO_SAFE_ASSERT_RETURN(fMasterUI != nullptr,);
+    DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
+    plugin->fUI = nullptr;
 
-    this->remove(fMasterUI->masterwindow);
+    deleteMaster();
+}
 
-    delete fMasterUI;
-    fMasterUI = nullptr;
+void DistrhoUIZynAddSubFX::initMaster(DistrhoPluginZynAddSubFX* const plugin)
+{
+    Fl::lock();
+
+    if (fMasterUI == nullptr)
+    {
+        fMasterUI = new MasterUI(plugin->fMaster, &fUiClosed);
+        this->add(fMasterUI->masterwindow);
+        fMasterUI->masterwindow->show();
+    }
+
+    Fl::unlock();
+}
+
+void DistrhoUIZynAddSubFX::deleteMaster()
+{
+    Fl::lock();
+
+    if (fMasterUI != nullptr)
+    {
+        this->remove(fMasterUI->masterwindow);
+        delete fMasterUI;
+        fMasterUI = nullptr;
+    }
+
+    Fl::unlock();
 }
 
 // -----------------------------------------------------------------------
@@ -106,7 +130,7 @@ void DistrhoUIZynAddSubFX::d_parameterChanged(uint32_t, float)
 
 void DistrhoUIZynAddSubFX::d_stateChanged(const char* key, const char*)
 {
-    if (std::strcmp(key, "state") != 0)
+    if (std::strcmp(key, "state") != 0 || fMasterUI == nullptr)
         return;
 
     fMasterUI->refresh_master_ui();

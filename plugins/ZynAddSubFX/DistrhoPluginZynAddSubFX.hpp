@@ -98,7 +98,6 @@ protected:
 
 private:
     Master* fMaster;
-    //MasterUI* fMasterUI;
     uint    fSampleRate;
 
     DistrhoUIZynAddSubFX* fUI;

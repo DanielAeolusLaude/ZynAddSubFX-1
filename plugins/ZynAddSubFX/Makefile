@@ -75,7 +75,7 @@ ZYN_UI_FILES_H = \
 # --------------------------------------------------------------
 
 DistrhoPluginZynAddSubFX.cpp.o: DistrhoPluginZynAddSubFX.cpp
-	$(CXX) $< $(BUILD_CXX_FLAGS) $(shell pkg-config --cflags fftw3 mxml zlib) -c -o $@
+	$(CXX) $< $(BUILD_CXX_FLAGS) $(shell pkg-config --cflags fftw3 mxml zlib ntk) -c -o $@
 
 DistrhoUIZynAddSubFX.cpp.o: DistrhoUIZynAddSubFX.cpp $(ZYN_UI_FILES_H)
 	$(CXX) $< $(BUILD_CXX_FLAGS) $(shell pkg-config --cflags ntk_images ntk) -c -o $@

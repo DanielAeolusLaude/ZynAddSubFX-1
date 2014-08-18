@@ -32,6 +32,9 @@ public:
     DistrhoUIZynAddSubFX();
     ~DistrhoUIZynAddSubFX() override;
 
+    void initMaster(DistrhoPluginZynAddSubFX* const plugin);
+    void deleteMaster();
+
 protected:
     // -------------------------------------------------------------------
     // Information
