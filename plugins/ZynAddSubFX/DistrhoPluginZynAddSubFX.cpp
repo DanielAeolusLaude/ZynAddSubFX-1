@@ -287,7 +287,7 @@ void DistrhoPluginZynAddSubFX::d_bufferSizeChanged(uint32_t newBufferSize)
     _initMaster();
 
     if (fUI != nullptr)
-        fUI->initMaster(this);
+        fUI->initMaster(fMaster);
 }
 
 void DistrhoPluginZynAddSubFX::d_sampleRateChanged(double newSampleRate)
@@ -304,7 +304,7 @@ void DistrhoPluginZynAddSubFX::d_sampleRateChanged(double newSampleRate)
     _initMaster();
 
     if (fUI != nullptr)
-        fUI->initMaster(this);
+        fUI->initMaster(fMaster);
 }
 
 void DistrhoPluginZynAddSubFX::_initMaster()

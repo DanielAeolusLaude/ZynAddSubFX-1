@@ -20,6 +20,8 @@
 
 #include "DistrhoUI.hpp"
 
+#include "extra/d_mutex.hpp"
+
 #include "DistrhoPluginZynAddSubFX.hpp"
 
 START_NAMESPACE_DISTRHO
@@ -32,7 +34,7 @@ public:
     DistrhoUIZynAddSubFX();
     ~DistrhoUIZynAddSubFX() override;
 
-    void initMaster(DistrhoPluginZynAddSubFX* const plugin);
+    void initMaster(Master* const master);
     void deleteMaster();
 
 protected:
@@ -57,6 +59,7 @@ protected:
 
 private:
     MasterUI* fMasterUI;
+    Mutex fUiMutex;
     int fUiClosed;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistrhoUIZynAddSubFX)

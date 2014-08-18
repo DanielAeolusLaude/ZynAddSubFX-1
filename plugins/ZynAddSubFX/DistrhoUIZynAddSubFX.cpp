@@ -49,11 +49,73 @@ START_NAMESPACE_DISTRHO
 DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
     : UI(),
       fMasterUI(nullptr),
+      fUiMutex(),
       fUiClosed(-1)
+{
+    DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
+    DISTRHO_SAFE_ASSERT_RETURN(plugin != nullptr,);
+
+    initMaster(plugin->fMaster);
+    plugin->fUI = this;
+}
+
+DistrhoUIZynAddSubFX::~DistrhoUIZynAddSubFX()
+{
+    if (DistrhoPluginZynAddSubFX* const plugin = (DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer())
+        plugin->fUI = nullptr;
+
+    deleteMaster();
+}
+
+void DistrhoUIZynAddSubFX::initMaster(Master* const master)
+{
+    const MutexLocker ml(fUiMutex);
+
+    DISTRHO_SAFE_ASSERT_RETURN(master != nullptr,);
+    DISTRHO_SAFE_ASSERT_RETURN(fMasterUI == nullptr,);
+
+    fMasterUI = new MasterUI(master, &fUiClosed);
+    this->add(fMasterUI->masterwindow);
+    fMasterUI->masterwindow->show();
+}
+
+void DistrhoUIZynAddSubFX::deleteMaster()
+{
+    const MutexLocker ml(fUiMutex);
+
+    DISTRHO_SAFE_ASSERT_RETURN(fMasterUI != nullptr,);
+
+    fMasterUI->masterwindow->hide();
+    this->remove(fMasterUI->masterwindow);
+    delete fMasterUI;
+    fMasterUI = nullptr;
+}
+
+// -----------------------------------------------------------------------
+// DSP Callbacks
+
+void DistrhoUIZynAddSubFX::d_parameterChanged(uint32_t, float)
+{
+}
+
+void DistrhoUIZynAddSubFX::d_stateChanged(const char* key, const char*)
+{
+    if (std::strcmp(key, "state") != 0)
+        return;
+
+    const MutexLocker sl(fUiMutex);
+
+    if (fMasterUI != nullptr)
+        fMasterUI->refresh_master_ui();
+}
+
+// -----------------------------------------------------------------------
+
+UI* createUI()
 {
     static bool initiated = false;
 
-    if (gModuleBackdrop == nullptr && ! initiated)
+    if (! initiated)
     {
         initiated = true;
 
@@ -76,70 +138,9 @@ DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
         Fl::background2(70, 70, 70);
         Fl::foreground(255, 255, 255);
 
-        Fl_Theme::set("Cairo");
+        //Fl_Theme::set("Cairo");
     }
 
-    DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
-
-    initMaster(plugin);
-    plugin->fUI = this;
-}
-
-DistrhoUIZynAddSubFX::~DistrhoUIZynAddSubFX()
-{
-    DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
-    plugin->fUI = nullptr;
-
-    deleteMaster();
-}
-
-void DistrhoUIZynAddSubFX::initMaster(DistrhoPluginZynAddSubFX* const plugin)
-{
-    Fl::lock();
-
-    if (fMasterUI == nullptr)
-    {
-        fMasterUI = new MasterUI(plugin->fMaster, &fUiClosed);
-        this->add(fMasterUI->masterwindow);
-        fMasterUI->masterwindow->show();
-    }
-
-    Fl::unlock();
-}
-
-void DistrhoUIZynAddSubFX::deleteMaster()
-{
-    Fl::lock();
-
-    if (fMasterUI != nullptr)
-    {
-        this->remove(fMasterUI->masterwindow);
-        delete fMasterUI;
-        fMasterUI = nullptr;
-    }
-
-    Fl::unlock();
-}
-
-// -----------------------------------------------------------------------
-// DSP Callbacks
-
-void DistrhoUIZynAddSubFX::d_parameterChanged(uint32_t, float)
-{
-}
-
-void DistrhoUIZynAddSubFX::d_stateChanged(const char* key, const char*)
-{
-    if (std::strcmp(key, "state") != 0 || fMasterUI == nullptr)
-        return;
-
-    fMasterUI->refresh_master_ui();
-}
-
-// -----------------------------------------------------------------------
-
-UI* createUI()
-{
     return new DistrhoUIZynAddSubFX();
 }
 
