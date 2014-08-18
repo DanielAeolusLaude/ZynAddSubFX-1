@@ -69,7 +69,7 @@ DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
         if (Fl_Shared_Image* const img = Fl_Shared_Image::get(gPixmapPath + "window_backdrop.png"))
             Fl::scheme_bg(new Fl_Tiled_Image(img));
 
-        if(Fl_Shared_Image* const img = Fl_Shared_Image::get(gPixmapPath + "module_backdrop.png"))
+        if (Fl_Shared_Image* const img = Fl_Shared_Image::get(gPixmapPath + "module_backdrop.png"))
             gModuleBackdrop = new Fl_Tiled_Image(img);
 
         Fl::background(50, 50, 50);
@@ -81,8 +81,10 @@ DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
 
     DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
     fMasterUI = new MasterUI(plugin->fMaster, &fUiClosed);
+
     this->add(fMasterUI->masterwindow);
-    fMasterUI->showUI();
+
+    fMasterUI->masterwindow->show();
 }
 
 DistrhoUIZynAddSubFX::~DistrhoUIZynAddSubFX()
@@ -102,12 +104,12 @@ void DistrhoUIZynAddSubFX::d_parameterChanged(uint32_t, float)
 {
 }
 
-void DistrhoUIZynAddSubFX::d_stateChanged(const char* key, const char* value)
+void DistrhoUIZynAddSubFX::d_stateChanged(const char* key, const char*)
 {
     if (std::strcmp(key, "state") != 0)
         return;
 
-    //fUi->masterwindow->label(name);
+    fMasterUI->refresh_master_ui();
 }
 
 // -----------------------------------------------------------------------
