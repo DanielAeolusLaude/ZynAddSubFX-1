@@ -70,7 +70,7 @@ jack: $(jack)
 
 $(jack): $(OBJS_DSP) $(OBJS_UI) $(DISTRHO_PLUGIN_FILES) $(DISTRHO_UI_FILES)
 	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs jack fftw3 mxml zlib ntk_images ntk) -DDISTRHO_PLUGIN_TARGET_JACK -o $@
+	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs jack fftw3 mxml zlib ntk_images ntk x11) -DDISTRHO_PLUGIN_TARGET_JACK -o $@
 
 # --------------------------------------------------------------
 # LV2
@@ -79,7 +79,7 @@ lv2: $(lv2)
 
 $(lv2): $(OBJS_DSP) $(OBJS_UI) $(DISTRHO_PLUGIN_FILES) $(DISTRHO_UI_FILES)
 	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs fftw3 mxml zlib ntk_images ntk) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LV2 -o $@
+	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs fftw3 mxml zlib ntk_images ntk x11) $(SHARED) -DDISTRHO_PLUGIN_TARGET_LV2 -o $@
 
 # --------------------------------------------------------------
 # VST
@@ -88,6 +88,6 @@ vst: $(vst)
 
 $(vst): $(OBJS_DSP) $(OBJS_UI) $(DISTRHO_PLUGIN_FILES) $(DISTRHO_UI_FILES)
 	mkdir -p $(shell dirname $@)
-	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs fftw3 mxml zlib ntk_images ntk) $(SHARED) -DDISTRHO_PLUGIN_TARGET_VST -o $@
+	$(CXX) $^ $(BUILD_CXX_FLAGS) $(LINK_FLAGS) $(shell pkg-config --cflags --libs fftw3 mxml zlib ntk_images ntk x11) $(SHARED) -DDISTRHO_PLUGIN_TARGET_VST -o $@
 
 # --------------------------------------------------------------
