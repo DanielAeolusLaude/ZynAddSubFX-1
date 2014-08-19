@@ -52,6 +52,8 @@ DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
       fUiMutex(),
       fUiClosed(-1)
 {
+    setSize(390, 525);
+
     DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
     DISTRHO_SAFE_ASSERT_RETURN(plugin != nullptr,);
 
@@ -127,18 +129,24 @@ UI* createUI()
 
         if (Fl_Shared_Image* const img = Fl_Shared_Image::get(gPixmapPath + "knob.png"))
             Fl_Dial::default_image(img);
+        else
+            d_stderr("failed to find knob.png");
 
         if (Fl_Shared_Image* const img = Fl_Shared_Image::get(gPixmapPath + "window_backdrop.png"))
             Fl::scheme_bg(new Fl_Tiled_Image(img));
+        else
+            d_stderr("failed to find window_backdrop.png");
 
         if (Fl_Shared_Image* const img = Fl_Shared_Image::get(gPixmapPath + "module_backdrop.png"))
             gModuleBackdrop = new Fl_Tiled_Image(img);
+        else
+            d_stderr("failed to find module_backdrop.png");
 
         Fl::background(50, 50, 50);
         Fl::background2(70, 70, 70);
         Fl::foreground(255, 255, 255);
 
-        //Fl_Theme::set("Cairo");
+        Fl_Theme::set("Cairo");
     }
 
     return new DistrhoUIZynAddSubFX();
