@@ -74,7 +74,7 @@ protected:
     // Init
 
     void d_initParameter(uint32_t index, Parameter& parameter) override;
-    void d_initStateKey(uint32_t index, d_string& stateKey) override;
+    void d_initState(uint32_t index, d_string& stateKey, d_string& defaultStateValue) override;
 
     // -------------------------------------------------------------------
     // Internal data

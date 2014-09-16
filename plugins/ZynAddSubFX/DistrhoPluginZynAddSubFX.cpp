@@ -185,12 +185,13 @@ float DistrhoPluginZynAddSubFX::d_getParameterValue(uint32_t) const   { return 0
 // -----------------------------------------------------------------------
 // State
 
-void DistrhoPluginZynAddSubFX::d_initStateKey(uint32_t index, d_string& stateKey)
+void DistrhoPluginZynAddSubFX::d_initState(uint32_t index, d_string& stateKey, d_string& defaultStateValue)
 {
     if (index != 0)
         return;
 
     stateKey = "state";
+    defaultStateValue = "";
 }
 
 void DistrhoPluginZynAddSubFX::d_setState(const char* key, const char* value)
