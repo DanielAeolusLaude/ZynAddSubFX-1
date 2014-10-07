@@ -4,14 +4,11 @@
 # Created by falkTX
 #
 
-all: libs plugins gen
+all: plugins gen
 
 # --------------------------------------------------------------
 
-libs:
-	$(MAKE) -C dpf/dgl
-
-plugins: libs
+plugins:
 	$(MAKE) all -C plugins/ZynAddSubFX
 
 gen: plugins dpf/utils/lv2_ttl_generator
@@ -23,7 +20,6 @@ dpf/utils/lv2_ttl_generator:
 # --------------------------------------------------------------
 
 clean:
-	$(MAKE) clean -C dpf/dgl
 	$(MAKE) clean -C dpf/utils/lv2-ttl-generator
 	$(MAKE) clean -C plugins/ZynAddSubFX
 
