@@ -113,7 +113,7 @@ public:
 
     void maybeReinit(const double sampleRate, const uint32_t bufferSize)
     {
-        if (bufferSize == synth->buffersize && sampleRate == synth->samplerate)
+        if (synth->buffersize == int(bufferSize) && synth->samplerate == uint(sampleRate))
             return;
 
         reinit(sampleRate, bufferSize);
