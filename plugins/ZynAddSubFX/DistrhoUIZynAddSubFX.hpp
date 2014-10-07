@@ -44,10 +44,16 @@ protected:
     void d_parameterChanged(uint32_t index, float value) override;
     void d_stateChanged(const char* key, const char* value) override;
 
+    // -------------------------------------------------------------------
+    // UI Callbacks
+
+    void d_uiIdle() override;
+
 private:
     MasterUI* fMasterUI;
     Mutex fUiMutex;
     int fUiClosed;
+    int fNeedsRefresh;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistrhoUIZynAddSubFX)
 };

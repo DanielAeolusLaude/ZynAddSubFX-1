@@ -17,6 +17,7 @@
 
 #include "extra/d_string.hpp"
 
+#define NTK_GUI
 #define CARLA_VERSION_STRING
 #define PLUGINVERSION
 #define SOURCE_DIR "/usr/share/zynaddsubfx/examples"
