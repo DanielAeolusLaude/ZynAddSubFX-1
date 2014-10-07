@@ -129,35 +129,6 @@ private:
 static ZynAddSubFxInstanceCount sInstanceCount;
 
 // -----------------------------------------------------------------------
-// Stores state on contructor, restores state on destuctor
-// Needed when recreating a zyn instance during buffersize/samplerate changes
-
-class ZynAddSubFxStateRestorer
-{
-public:
-    ZynAddSubFxStateRestorer(Master* const master)
-        : fData(nullptr),
-          fMaster(master)
-    {
-        config.save();
-        fMaster->getalldata(&fData);
-    }
-
-    ~ZynAddSubFxStateRestorer()
-    {
-        fMaster->putalldata(fData, 0);
-        fMaster->applyparameters(true);
-    }
-
-private:
-    char* fData;
-    Master* const fMaster;
-
-    DISTRHO_PREVENT_HEAP_ALLOCATION
-    DISTRHO_DECLARE_NON_COPY_CLASS(ZynAddSubFxStateRestorer)
-};
-
-// -----------------------------------------------------------------------
 
 DistrhoPluginZynAddSubFX::DistrhoPluginZynAddSubFX()
     : Plugin(paramCount, 0, 1), // 0 programs, 1 states
@@ -231,8 +202,8 @@ void DistrhoPluginZynAddSubFX::d_run(const float**, float** outputs, uint32_t fr
         const MidiEvent& midiEvent(midiEvents[i]);
         const uint8_t* const midiData(midiEvent.data);
 
-        const uint8_t status  = (midiData[0] < 0xF0) ? midiData[0] & 0xF0 : midiData[0];
-        const char    channel = (midiData[0] < 0xF0) ? midiData[0] & 0x0F : 0;
+        const uint8_t status  = (midiData[0] >= 0x80 && midiData[0] < 0xF0) ? midiData[0] & 0xF0 : midiData[0];
+        const char    channel = (midiData[0] >= 0x80 && midiData[0] < 0xF0) ? midiData[0] & 0x0F : 0;
 
         if (status == 0x80)
         {
@@ -278,7 +249,9 @@ void DistrhoPluginZynAddSubFX::d_run(const float**, float** outputs, uint32_t fr
 
 void DistrhoPluginZynAddSubFX::d_bufferSizeChanged(uint32_t newBufferSize)
 {
-    ZynAddSubFxStateRestorer stateRestorer(fMaster);
+    config.save();
+    char* data = nullptr;
+    fMaster->getalldata(&data);
 
     if (fUI != nullptr)
         fUI->deleteMaster();
@@ -287,22 +260,32 @@ void DistrhoPluginZynAddSubFX::d_bufferSizeChanged(uint32_t newBufferSize)
     sInstanceCount.maybeReinit(d_getSampleRate(), newBufferSize);
     _initMaster();
 
+    fMaster->putalldata(data, 0);
+    fMaster->applyparameters(true);
+    std::free(data);
+
     if (fUI != nullptr)
         fUI->initMaster(fMaster);
 }
 
 void DistrhoPluginZynAddSubFX::d_sampleRateChanged(double newSampleRate)
 {
-    ZynAddSubFxStateRestorer stateRestorer(fMaster);
-
-    fSampleRate = newSampleRate;
+    config.save();
+    char* data = nullptr;
+    fMaster->getalldata(&data);
 
     if (fUI != nullptr)
         fUI->deleteMaster();
 
+    fSampleRate = newSampleRate;
+
     _deleteMaster();
     sInstanceCount.maybeReinit(newSampleRate, d_getBufferSize());
     _initMaster();
+
+    fMaster->putalldata(data, 0);
+    fMaster->applyparameters(true);
+    std::free(data);
 
     if (fUI != nullptr)
         fUI->initMaster(fMaster);
