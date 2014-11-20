@@ -75,9 +75,8 @@ ifeq ($(LINUX),true)
 ifneq ($(shell pkg-config --exists jack && echo true),true)
 $(error JACK missing, cannot continue)
 endif
-# needed?
-ifneq ($(shell pkg-config --exists gl && echo true),true)
-$(error OpenGL missing, cannot continue)
+ifneq ($(shell pkg-config --exists x11 && echo true),true)
+$(error X11 missing, cannot continue)
 endif
 endif
 

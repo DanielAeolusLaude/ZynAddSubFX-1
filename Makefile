@@ -11,16 +11,16 @@ all: plugins gen
 plugins:
 	$(MAKE) all -C plugins/ZynAddSubFX
 
-gen: plugins dpf/utils/lv2_ttl_generator
-	@$(CURDIR)/dpf/utils/generate-ttl.sh
+gen: plugins dpf-ntk/utils/lv2_ttl_generator
+	@$(CURDIR)/dpf-ntk/utils/generate-ttl.sh
 
-dpf/utils/lv2_ttl_generator:
-	$(MAKE) -C dpf/utils/lv2-ttl-generator
+dpf-ntk/utils/lv2_ttl_generator:
+	$(MAKE) -C dpf-ntk/utils/lv2-ttl-generator
 
 # --------------------------------------------------------------
 
 clean:
-	$(MAKE) clean -C dpf/utils/lv2-ttl-generator
+	$(MAKE) clean -C dpf-ntk/utils/lv2-ttl-generator
 	$(MAKE) clean -C plugins/ZynAddSubFX
 
 # --------------------------------------------------------------

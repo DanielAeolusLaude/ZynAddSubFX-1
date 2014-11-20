@@ -47,13 +47,13 @@ START_NAMESPACE_DISTRHO
 // -----------------------------------------------------------------------
 
 DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
-    : UI(),
+    : NtkUI(),
       fMasterUI(nullptr),
       fUiMutex(),
       fUiClosed(-1),
       fNeedsRefresh(false)
 {
-    setSize(390, 525);
+    size(390, 525);
 
     DistrhoPluginZynAddSubFX* const plugin((DistrhoPluginZynAddSubFX*)d_getPluginInstancePointer());
     DISTRHO_SAFE_ASSERT_RETURN(plugin != nullptr,);
@@ -128,7 +128,7 @@ void DistrhoUIZynAddSubFX::d_uiIdle()
 
 // -----------------------------------------------------------------------
 
-UI* createUI()
+NtkUI* createUI()
 {
     static bool initiated = false;
 

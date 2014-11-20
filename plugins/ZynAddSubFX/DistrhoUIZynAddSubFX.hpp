@@ -28,7 +28,7 @@ START_NAMESPACE_DISTRHO
 
 // -----------------------------------------------------------------------
 
-class DistrhoUIZynAddSubFX : public UI
+class DistrhoUIZynAddSubFX : public NtkUI
 {
 public:
     DistrhoUIZynAddSubFX();
