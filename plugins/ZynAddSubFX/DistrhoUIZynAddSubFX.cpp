@@ -51,7 +51,7 @@ DistrhoUIZynAddSubFX::DistrhoUIZynAddSubFX()
       fMasterUI(nullptr),
       fUiMutex(),
       fUiClosed(-1),
-      fNeedsRefresh(0)
+      fNeedsRefresh(false)
 {
     setSize(390, 525);
 
@@ -77,6 +77,7 @@ void DistrhoUIZynAddSubFX::initMaster(Master* const master)
     DISTRHO_SAFE_ASSERT_RETURN(master != nullptr,);
     DISTRHO_SAFE_ASSERT_RETURN(fMasterUI == nullptr,);
 
+    fUiClosed = -1;
     fMasterUI = new MasterUI(master, &fUiClosed);
     this->add(fMasterUI->masterwindow);
     fMasterUI->masterwindow->show();
@@ -108,12 +109,12 @@ void DistrhoUIZynAddSubFX::d_stateChanged(const char* key, const char*)
     if (std::strcmp(key, "state") != 0)
         return;
 
-    fNeedsRefresh = 0;
+    fNeedsRefresh = true;
 }
 
 void DistrhoUIZynAddSubFX::d_uiIdle()
 {
-    if (fNeedsRefresh == -1 || ++fNeedsRefresh < 5)
+    if (! fNeedsRefresh)
         return;
 
     const MutexLocker ml(fUiMutex);
@@ -122,7 +123,7 @@ void DistrhoUIZynAddSubFX::d_uiIdle()
 
     fMasterUI->masterwindow->redraw();
     fMasterUI->refresh_master_ui();
-    fNeedsRefresh = -1;
+    fNeedsRefresh = false;
 }
 
 // -----------------------------------------------------------------------

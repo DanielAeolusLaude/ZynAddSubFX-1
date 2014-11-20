@@ -53,7 +53,7 @@ private:
     MasterUI* fMasterUI;
     Mutex fUiMutex;
     int fUiClosed;
-    int fNeedsRefresh;
+    bool fNeedsRefresh;
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistrhoUIZynAddSubFX)
 };

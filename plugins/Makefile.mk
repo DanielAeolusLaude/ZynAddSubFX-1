@@ -60,7 +60,7 @@ all:
 # Common
 
 clean:
-	rm -f *.o
+	rm -f *.o ../*.o
 	rm -rf $(TARGET_DIR)/$(NAME) $(TARGET_DIR)/$(NAME)-* $(TARGET_DIR)/$(NAME).lv2/
 
 # --------------------------------------------------------------
